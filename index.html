@@ -5,64 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Saya</title>
     <style>
-        iframe {
+        .app-container {
             width: 100%;
-            height: 600px;
-            border: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
         }
         
-        body *:contains("Aplikasi ini dibuat oleh pengguna Google Apps Script") {
+        .hidden-element {
             display: none !important;
-        }
-        
-        [data-app-credit],
-        [class*="footer"],
-        [class*="credit"],
-        [id*="footer"],
-        [id*="credit"] {
-            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            opacity: 0 !important;
         }
     </style>
 </head>
 <body>
-    <iframe src="https://script.google.com/macros/s/AKfycbxlZR6oI_rf8k39fYERQxrmXlgkvDoPQLQNwAAijnlrZmYH4hYt3kaH60rHhBuwzQJS/exec"></iframe>
+    <div class="app-container">
+        <h1>Aplikasi Anda Akan Dimuat Di Sini</h1>
+        <p>Untuk mengatasi masalah embed, ikuti langkah berikut:</p>
+        <ol>
+            <li>Buka Google Apps Script Anda</li>
+            <li>Klik "Deploy" → "New deployment"</li>
+            <li>Pilih "Web app"</li>
+            <li>Atur "Execute as" ke akun Anda</li>
+            <li>Atur "Who has access" ke "Anyone" atau "Anyone with Google account"</li>
+            <li>Klik "Deploy" dan salin URL yang diberikan</li>
+            <li>Ganti URL di bawah dengan URL deployment Anda</li>
+        </ol>
+        
+        <div id="app-content">
+            <p>Setelah deployment berhasil, aplikasi akan tampil di sini.</p>
+        </div>
+    </div>
     
     <script>
-        document.querySelector('iframe').onload = function() {
-            try {
-                var iframeDocument = this.contentDocument || this.contentWindow.document;
-                var allElements = iframeDocument.querySelectorAll('*');
-                
-                allElements.forEach(function(element) {
-                    if (element.textContent && element.textContent.includes('Aplikasi ini dibuat oleh pengguna Google Apps Script')) {
-                        element.style.display = 'none';
-                        element.style.visibility = 'hidden';
-                        element.style.opacity = '0';
-                        element.style.height = '0';
-                        element.style.overflow = 'hidden';
-                    }
+        function loadGoogleAppsScript() {
+            const appUrl = "https://script.google.com/macros/s/AKfycbyNZ4H0q9lSHVN-ZFDdqLuJ34lpsq_Y5J_cyVRnJtB6YsNkKVDBs74cafZ2y9SnkIXe/exec";
+            
+            fetch(appUrl)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const elements = doc.querySelectorAll('*');
+                    elements.forEach(el => {
+                        if (el.textContent && el.textContent.includes('Aplikasi ini dibuat oleh pengguna Google Apps Script')) {
+                            el.classList.add('hidden-element');
+                            el.style.cssText = 'display:none !important; visibility:hidden !important; height:0 !important; opacity:0 !important;';
+                        }
+                    });
+                    
+                    document.getElementById('app-content').innerHTML = doc.body.innerHTML;
+                    
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        *:contains("Aplikasi ini dibuat oleh pengguna Google Apps Script"),
+                        [class*="footer"],
+                        [class*="credit"] {
+                            display: none !important;
+                            visibility: hidden !important;
+                            height: 0 !important;
+                            opacity: 0 !important;
+                            overflow: hidden !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                })
+                .catch(error => {
+                    document.getElementById('app-content').innerHTML = `
+                        <div style="color: red; padding: 20px; border: 1px solid red; border-radius: 5px;">
+                            <h3>Error loading application</h3>
+                            <p>Please check:</p>
+                            <ul>
+                                <li>Your script is deployed as a Web App</li>
+                                <li>Access is set to "Anyone" or "Anyone with Google account"</li>
+                                <li>You have the correct URL</li>
+                            </ul>
+                            <p>Error details: ${error.message}</p>
+                        </div>
+                    `;
                 });
-                
-                var style = iframeDocument.createElement('style');
-                style.textContent = `
-                    body *:contains("Aplikasi ini dibuat oleh pengguna Google Apps Script"),
-                    [data-app-credit],
-                    [class*="footer"],
-                    [class*="credit"],
-                    [id*="footer"],
-                    [id*="credit"] {
-                        display: none !important;
-                        visibility: hidden !important;
-                        opacity: 0 !important;
-                        height: 0 !important;
-                        overflow: hidden !important;
-                    }
-                `;
-                iframeDocument.head.appendChild(style);
-            } catch(e) {
-                console.log("Tidak dapat mengakses konten iframe:", e);
-            }
-        };
+        }
+        
+        window.onload = loadGoogleAppsScript;
     </script>
 </body>
 </html>
