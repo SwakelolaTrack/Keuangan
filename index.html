@@ -1,36 +1,53 @@
 <!DOCTYPE html>
-<html style="height:100%;margin:0;padding:0;">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>My Google Apps Script App</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #appFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
 </head>
-<body style="height:100%;margin:0;padding:0;">
+<body>
     <iframe 
-        src="https://script.google.com/macros/s/AKfycbyNZ4H0q9lSHVN-ZFDdqLuJ34lpsq_Y5J_cyVRnJtB6YsNkKVDBs74cafZ2y9SnkIXe/exec" 
-        style="width:100%;height:100%;border:none;"
-        frameborder="0"
-        allowfullscreen>
+        id="appFrame"
+        src="https://script.google.com/macros/s/AKfycbyNZ4H0q9lSHVN-ZFDdqLuJ34lpsq_Y5J_cyVRnJtB6YsNkKVDBs74cafZ2y9SnkIXe/exec"
+        allow="fullscreen"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals">
     </iframe>
+    
     <script>
-        document.title = "My App";
-        
-        setTimeout(function() {
+        // Menyembunyikan teks Google Apps Script footer
+        function hideGASFooter() {
             try {
-                var iframe = document.querySelector('iframe');
-                var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const frame = document.getElementById('appFrame');
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
                 
-                var style = iframeDoc.createElement('style');
+                // Tambahkan CSS untuk menyembunyikan footer
+                const style = frameDoc.createElement('style');
                 style.textContent = `
-                    body * {
-                        font-family: Arial, sans-serif !important;
-                    }
-                    *:contains("Aplikasi ini dibuat oleh pengguna Google Apps Script"),
-                    div[style*="footer"],
-                    div[class*="footer"],
-                    span[class*="credit"],
-                    p:contains("dibuat oleh pengguna"),
-                    .apps-script-footer {
+                    [class*="footer"],
+                    [id*="footer"],
+                    [class*="credit"],
+                    [id*="credit"],
+                    [data-role="footer"],
+                    div:has(> *:contains("Aplikasi ini dibuat oleh")),
+                    div:has(> *:contains("dibuat oleh pengguna Google")),
+                    .apps-script-footer-template,
+                    .footer-container,
+                    .script-apps-footer {
                         display: none !important;
                         visibility: hidden !important;
                         height: 0 !important;
@@ -38,11 +55,50 @@
                         margin: 0 !important;
                         padding: 0 !important;
                         overflow: hidden !important;
+                        position: absolute !important;
+                        clip: rect(0,0,0,0) !important;
+                    }
+                    
+                    body {
+                        overflow: auto !important;
                     }
                 `;
-                iframeDoc.head.appendChild(style);
-            } catch(e) {}
-        }, 3000);
+                
+                if (frameDoc.head) {
+                    frameDoc.head.appendChild(style);
+                }
+                
+                // Juga sembunyikan melalui JavaScript
+                const allElements = frameDoc.querySelectorAll('*');
+                allElements.forEach(element => {
+                    if (element.textContent && (
+                        element.textContent.includes('Aplikasi ini dibuat oleh pengguna Google Apps Script') ||
+                        element.textContent.includes('dibuat oleh pengguna Google') ||
+                        element.textContent.includes('Google Apps Script')
+                    )) {
+                        element.style.cssText = 'display:none!important;visibility:hidden!important;height:0!important;';
+                    }
+                });
+                
+            } catch (error) {
+                console.log('Menunggu iframe loading...');
+            }
+        }
+        
+        // Coba sembunyikan footer berkala
+        const frame = document.getElementById('appFrame');
+        frame.onload = function() {
+            // Coba beberapa kali karena konten mungkin load bertahap
+            setTimeout(hideGASFooter, 1000);
+            setTimeout(hideGASFooter, 3000);
+            setTimeout(hideGASFooter, 5000);
+            
+            // Monitor perubahan DOM
+            setInterval(hideGASFooter, 10000);
+        };
+        
+        // Juga coba saat pertama kali
+        window.addEventListener('DOMContentLoaded', hideGASFooter);
     </script>
 </body>
 </html>
